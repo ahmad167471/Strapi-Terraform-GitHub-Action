@@ -9,7 +9,7 @@ variable "ec2_ssh_private_key" {
   sensitive   = true
 }
 
-data "aws_instance" "strapi_ec2-Ahmad" {
+data "aws_instance" "strapi_ec2" {
   # Option A: by tag (recommended) — make sure your EC2 has this exact tag
   filter {
     name   = "tag:Name"
