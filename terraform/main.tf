@@ -1,60 +1,29 @@
-# ─────────────────────────────────────────────
-# AWS Provider (REQUIRED)
-# ─────────────────────────────────────────────
 provider "aws" {
   region = "us-east-1"
 }
 
-# ─────────────────────────────────────────────
-# Variables
-# ─────────────────────────────────────────────
-variable "image_tag" {
-  description = "Docker image tag to deploy"
-  type        = string
-}
+resource "aws_instance" "strapi" {
+  ami           = "ami-0c1fe732b5494dc14"
+  instance_type = "t2.micro"
+  key_name      = "Pearl-Thoughts"
+  vpc_security_group_ids = [aws_security_group.allow_http.id]
 
-variable "ec2_ssh_private_key" {
-  description = "Base64-encoded SSH private key"
-  type        = string
-  sensitive   = true
-}
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install docker -y
+              systemctl start docker
+              usermod -aG docker ec2-user
 
-# ─────────────────────────────────────────────
-# Find Existing EC2
-# ─────────────────────────────────────────────
-data "aws_instance" "strapi_ec2" {
-  instance_id = "i-07207b6a8e43ab850"
-}
+              docker pull ahmad167471/strapi:${var.image_tag}
+              docker run -d -p 80:1337 ahmad167471/strapi:${var.image_tag}
+              EOF
 
-output "ec2_public_ip" {
-  value = data.aws_instance.strapi_ec2.public_ip
-}
-
-# ─────────────────────────────────────────────
-# Deploy Container via SSH
-# ─────────────────────────────────────────────
-resource "null_resource" "deploy_container" {
-
-  triggers = {
-    image_tag = var.image_tag
+  tags = {
+    Name = "Strapi-App"
   }
+}
 
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    private_key = base64decode(var.ec2_ssh_private_key)
-    host        = data.aws_instance.strapi_ec2.public_ip
-    timeout     = "3m"
-    agent       = false
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'SSH connected'",
-      "docker pull ahmad167471/strapi-app:${var.image_tag}",
-      "docker stop strapi || true",
-      "docker rm strapi || true",
-      "docker run -d --name strapi -p 1337:1337 ahmad167471/strapi-app:${var.image_tag}"
-    ]
-  }
+output "public_ip" {
+  value = aws_instance.strapi.public_ip
 }
