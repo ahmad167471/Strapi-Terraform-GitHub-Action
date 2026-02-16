@@ -34,7 +34,7 @@ resource "null_resource" "deploy_container" {
   user        = "ec2-user"               # ← change from "ubuntu" to "ec2-user"
   private_key = base64decode(var.ec2_ssh_private_key)
   host        = data.aws_instance.strapi_ec2.public_ip
-  timeout     = "5m"
+  timeout     = "5m"      
 }
   provisioner "remote-exec" {
     inline = [
