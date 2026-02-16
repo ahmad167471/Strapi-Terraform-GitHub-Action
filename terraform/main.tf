@@ -23,6 +23,7 @@ data "aws_instance" "strapi_ec2" {
   instance_id = "i-07207b6a8e43ab850"  
 }
 
+
 output "ec2_public_ip" {
   description = "Public IP of the Strapi EC2 instance"
   value       = data.aws_instance.strapi_ec2.public_ip
