@@ -1,0 +1,50 @@
+name: CD - Deploy to EC2 via Terraform + SSH
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy (e.g. 20260216-1234-abcd)'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{  }}
+          aws-secret-access-key: ${{  }}
+          aws-region:            ${{  }}         
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.x   # or latest
+
+      - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./terraform
+        run: terraform plan -var="image_tag=${{ github.event.inputs.image_tag }}"
+
+      - name: Terraform Apply
+        working-directory: ./terraform
+        run: terraform apply -auto-approve -var="image_tag=${{ github.event.inputs.image_tag }}"
+
+      # Optional final verification step
+      - name: Wait a bit & show public IP
+        run: |
+          sleep 15
+          echo "Deployment should be live at:"
+          echo "http://$(terraform -chdir=terraform output -raw ec2_public_ip):1337/admin"
