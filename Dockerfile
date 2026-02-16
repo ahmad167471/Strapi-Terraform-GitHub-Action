@@ -1,4 +1,5 @@
 # Use official Node base (Strapi recommends node:20-alpine or similar)
+# New test run - 
 FROM node:20-alpine
 
 # Install dependencies needed for sharp (image processing)
